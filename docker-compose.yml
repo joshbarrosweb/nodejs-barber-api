@@ -1,0 +1,88 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    entrypoint: .docker/entrypoint.sh
+    container_name: barber-app
+    ports:
+      - "3333:3333"
+    volumes:
+      - .:/home/node/app
+    depends_on:
+      - postgres
+      - mongo
+      - redis
+
+  postgres:
+    build: .docker/pg-config
+    container_name: postgresql
+    environment:
+      - 'POSTGRES_USER=josuebarros1995'
+      - 'POSTGRES_DB=barber'
+      - 'POSTGRES_PASSWORD=12345678'
+    ports:
+      - '5433:5432'
+    volumes:
+      - ./.docker/postgresql:/var/lib/postgresql/data
+    logging:
+      options:
+        max-size: 10m
+        max-file: '3'
+
+  mongo:
+    container_name: mongo
+    image: mongo
+    volumes:
+      - ./.docker/mongodb:/data/db
+    ports:
+      - '27018:27017'
+    logging:
+      options:
+        max-size: 10m
+        max-file: '3'
+
+  # mongo-express:
+  #  container_name: mongo-express
+  #  image: mongo-express
+  #  ports:
+  #    - 8089:8081
+  #  environment:
+  #    ME_CONFIG_BASICAUTH_USERNAME: josuebarros1995
+  #    ME_CONFIG_BASICAUTH_PASSWORD: 123456
+  #    ME_CONFIG_MONGODB_PORT: 27017
+  #    ME_CONFIG_MONGODB_ADMINUSERNAME: root
+  #    ME_CONFIG_MONGODB_ADMINPASSWORD: 123456
+  #  links:
+  #    - mongo
+  #  depends_on:
+  #    - mongo
+
+  redis:
+    image: redis:6.2.1-buster
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - '6380:6379'
+    tty: true
+    volumes:
+      - ./.docker/redis/data:/data
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '5'
+        max-size: '10m'
+
+  # redisinsights:
+  #  image: 'redislabs/redisinsight:latest'
+  #  container_name: redisinsights
+  #  restart: unless-stopped
+  #  ports:
+  #    - '8088:8001'
+  #  volumes:
+  #    - ./.docker/redisinsight:/db
+  #  logging:
+  #    driver: 'json-file'
+  #    options:
+  #      max-file: '5'
+  #      max-size: '10m'
